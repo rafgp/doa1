@@ -1,0 +1,40 @@
+# Use the official PHP image with Apache
+FROM php:8.3.2-apache
+
+# Install necessary extensions for Laravel
+RUN docker-php-ext-install pdo pdo_mysql
+
+# Enable Apache mod_rewrite
+RUN a2enmod rewrite
+
+# Copy the Laravel project to the container
+COPY . /var/www/html
+
+# Set the working directory
+WORKDIR /var/www/html
+
+# Create the necessary directories if they don't exist
+RUN mkdir -p /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public
+
+# Set appropriate permissions for Laravel
+RUN chown -R www-data:www-data /var/www/html
+RUN chmod -R 755 /var/www/html
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
+# Copy Apache configuration
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+
+# Enable site configuration
+RUN a2ensite 000-default
+
+# Disable the default site configuration
+RUN a2dissite 000-default.conf
+
+# Enable necessary Apache modules
+RUN a2enmod rewrite
+
+# Expose port 80
+EXPOSE 80
+
+# Start Apache service
+CMD ["apache2-foreground"]
